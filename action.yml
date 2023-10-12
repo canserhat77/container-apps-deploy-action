@@ -48,6 +48,10 @@ inputs:
       action. Note: this image name should include the registry server; e.g., <registryUrl>/<repo>:<tag>. If this
       argument is not provided, the value provided (or determined) for the "imageToBuild" argument will be used.'
     required: false
+  containerName:
+    description: |
+      'The container name which an image should be deployed into.'
+    required: false
   dockerfilePath:
     description: |
       'Relative path to the Dockerfile in the provided application source that should be used to build the image that is
@@ -450,6 +454,13 @@ runs:
         CA_GH_ACTION_CONTAINER_APP_ENVIRONMENT_VARIABLES_ARG="--env-vars ${{ inputs.environmentVariables }}"
         echo "CA_GH_ACTION_CONTAINER_APP_ENVIRONMENT_VARIABLES_ARG=${CA_GH_ACTION_CONTAINER_APP_ENVIRONMENT_VARIABLES_ARG}" >> $GITHUB_ENV
 
+    - name: Export conatiner name argument to environment variable if the Container name is provided
+      if: ${{ inputs.containerName != '' && inputs.imageToDeploy != '' && env.CA_GH_ACTION_YAML_PROVIDED != 'true' }}
+      shell: bash
+      run: |
+        CA_GH_ACTION_CONTAINER_APP_CONTAINER_NAME_ARG="--container-name ${{ inputs.containerName }}"
+        echo "CA_GH_ACTION_CONTAINER_APP_CONTAINER_NAME_ARG=${CA_GH_ACTION_CONTAINER_APP_CONTAINER_NAME_ARG}" >> $GITHUB_ENV
+
     - name: Export environment variables argument to environment variable if the Container App does exist
       if: ${{ inputs.environmentVariables != '' && env.CA_GH_ACTION_RESOURCE_EXISTS == 'true' && env.CA_GH_ACTION_YAML_PROVIDED != 'true' }}
       shell: bash
@@ -599,6 +610,7 @@ runs:
           -g ${{ env.CA_GH_ACTION_RESOURCE_GROUP }} \
           -n ${{ inputs.containerAppName }} \
           -i ${{ env.CA_GH_ACTION_IMAGE_TO_DEPLOY }} \
+          ${{ env.CA_GH_ACTION_CONTAINER_APP_CONTAINER_NAME_ARG }} \
           --environment ${{ env.CA_GH_ACTION_CONTAINER_APP_ENVIRONMENT }} \
           ${{ env.CA_GH_ACTION_INGRESS_ARG }} \
           ${{ env.CA_GH_ACTION_TARGET_PORT_ARG }} \
@@ -642,6 +654,7 @@ runs:
           -g ${{ env.CA_GH_ACTION_RESOURCE_GROUP }} \
           -n ${{ inputs.containerAppName }} \
           -i ${{ env.CA_GH_ACTION_IMAGE_TO_DEPLOY }} \
+          ${{ env.CA_GH_ACTION_CONTAINER_APP_CONTAINER_NAME_ARG }} \
           ${{ env.CA_GH_ACTION_CONTAINER_APP_ENVIRONMENT_VARIABLES_ARG }} \
           --output none
 
@@ -667,6 +680,7 @@ runs:
           -g ${{ env.CA_GH_ACTION_RESOURCE_GROUP }} \
           -n ${{ inputs.containerAppName }} \
           -i ${{ env.CA_GH_ACTION_IMAGE_TO_DEPLOY }} \
+          ${{ env.CA_GH_ACTION_CONTAINER_APP_CONTAINER_NAME_ARG }} \
           ${{ env.CA_GH_ACTION_TARGET_PORT_ARG }} \
           ${{ env.CA_GH_ACTION_INGRESS_ARG }} \
           ${{ env.CA_GH_ACTION_CONTAINER_APP_ENVIRONMENT_VARIABLES_ARG }} \
